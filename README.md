@@ -70,7 +70,9 @@ Each output .txt file corresponds to one input image and lists the classes in de
 
 ```
 For this study:
+
 pos = Down syndrome fetus
+
 neg = Normal fetus
 
 ## License
