@@ -41,7 +41,7 @@ python inference.py --stage predict --model DSNet1.pt --source "../Down_Syndrome
 | Argument                                      | Description                                                        |
 | --------------------------------------------- | ------------------------------------------------------------------ |
 | `--stage `                             | Indicates that the model is in inference mode.                     |
-| `--model `                     | Path to the proposed model DSNet1.pt. This study adopts 3-fold cross-validation, and therefore three trained models are provided(DSNet1.pt, DSNet2.pt, DSNet3.pt)
+| `--model `                     | Path to the proposed model. This study adopts 3-fold cross-validation, and therefore three trained models are provided(DSNet1.pt, DSNet2.pt, DSNet3.pt)
 | `--source ` | Directory containing the test images             |
 | `--imgsz `                                | Input feature space of size 1024×1024.                 |
 | `--save_txt`                             | Saves predictions (classes, probabilities) in `.txt` format.      |
