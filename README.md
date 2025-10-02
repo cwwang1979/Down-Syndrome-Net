@@ -7,7 +7,7 @@ https://github.com/cwwang1979/Down-Syndrome-Net
 - (Under submission) Wang et al. (2025) Deep learning for early Down syndrome screening on first-trimester ultrasound images
 ## Setup
 
-#### Requirerements
+#### Requirements
 - Ubuntu 18.04
 - GPU Memory => 16 GB
 - GPU driver version >= 530.30.02
@@ -30,12 +30,12 @@ conda activate DSNet
 pip install ultralytics
 ```
 
-#### 1. Inference 
+#### 2. Inference 
 
 To generate the prediction outcome of the DSNet model in partial Down syndrome dataset, 
 
 ```
-python inference.py --stage predict --model DSNet1.pt --source "../Down_Syndrome_dataset" --imgsz 1024 --save_txt=True --project "./inference_result" --name "DSNet1_predictions"
+python inference.py --stage predict --model DSNet1.pt --source "../Down_Syndrome_dataset/inference_dataset" --imgsz 1024 --save_txt=True --project "./inference_result" --name "DSNet1_predictions"
 ```
 
 | Argument                                      | Description                                                        |
@@ -63,14 +63,15 @@ After inference, the output directory structure will be:
         └── test_imagen.txt
 
 ```
-Each line in the output text file corresponds to one detected object, using the following format:
+Each output .txt file corresponds to one input image and lists the classes in descending order of predicted probability (highest first):
 ```
-<probabilities of class 1> <class1> 
-<probabilities of class 2> <class2> 
+<probability> <class_of_highest_probability>
+<probability> <class_of_second_highest_probability>
 
 ```
-pos is Down syndrome fetus
-neg is a normal fetus
+For this study:
+pos = Down syndrome fetus
+neg = Normal fetus
 
 ## License
 This Python source code is released under a creative commons license, which allows for personal and research use only. For a commercial license please contact Prof Ching-Wei Wang. You can view a license summary here:  
