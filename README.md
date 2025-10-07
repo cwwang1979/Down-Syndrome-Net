@@ -15,7 +15,7 @@ https://github.com/cwwang1979/Down-Syndrome-Net
 - Python (3.8.20), opencv-python (4.11.0.86), PyTorch (2.4.1), torchvision (0.19.1).
 
 #### Download
-Data, execution file, configuration file, and models are download from the [zip](https://drive.google.com/drive/u/0/folders/1cdf5lZ8DySHs6VPvJ8iqGcrTeJNGeEw9) file.
+Data, execution file, configuration file, and models are download from the [zip](https://drive.google.com/drive/u/0/folders/1cdf5lZ8DySHs6VPvJ8iqGcrTeJNGeEw9) file. Please use the password on the associated paper to decompress the file.
 
 ## Steps
 #### 1.Installation
