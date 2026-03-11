@@ -1,10 +1,10 @@
 
 # Down-Syndrome-Net
+https://github.com/cwwang1979/Down-Syndrome-Net
 
 ## Associated Publications
 If you use this work or any part of this repository in your research, please cite the following paper:
-https://github.com/cwwang1979/Down-Syndrome-Net
-- (Under submission) Wang et al. (2025) Deep learning for early Down syndrome screening on first-trimester ultrasound images
+- Wang et al. (under review) Deep learning for early Down syndrome screening on first-trimester ultrasound images
 ## Setup
 
 #### Requirements
