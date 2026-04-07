@@ -1,10 +1,10 @@
 
-# Down-Syndrome-Net
-https://github.com/cwwang1979/Down-Syndrome-Net
+# Data-Efficient Down Syndrome Network (DE-DSNet)
 
 ## Associated Publications
 If you use this work or any part of this repository in your research, please cite the following paper:
-- Wang et al. (under review) Deep learning for early Down syndrome screening on first-trimester ultrasound images
+https://github.com/cwwang1979/Down-Syndrome-Net
+- (Under submission) Wang et al. (2025) Deep learning for early Down syndrome screening on first-trimester ultrasound images
 ## Setup
 
 #### Requirements
@@ -15,22 +15,185 @@ If you use this work or any part of this repository in your research, please cit
 - Python (3.8.20), opencv-python (4.11.0.86), PyTorch (2.4.1), torchvision (0.19.1).
 
 #### Download
-Data, execution file, configuration file, and models are download from the [zip](https://drive.google.com/drive/u/0/folders/1cdf5lZ8DySHs6VPvJ8iqGcrTeJNGeEw9) file. Please use the password on the associated paper to decompress the file.
+Data is download from the [zip](https://drive.google.com/drive/folders/1cOJHQR1HMLbqTkAoDAGilKgpWxn6wqf4) file. Please use the password on the associated paper to decompress the file.
+
+Code, execution file, configuration file, and models are download from the [zip](https://drive.google.com/drive/folders/1amVTucHGRIKUqrMT0nC4Cq_kJ2q8Y3kA) file. Please use the password on the associated paper to decompress the file.
 
 ## Steps
-#### 1.Installation
+### 1.Installation
 
 Please refer to the following instructions.
 ```
 # create and activate the conda environment
-conda create -n DSNet python=3.8 -y
-conda activate DSNet
+conda create -n DE_DSNet python=3.8 -y
+conda activate DE_DSNet
 
 # install related package
-pip install ultralytics
+pip install -r requirements.txt
+```
+### 2. Run the augmentation script 
+
+This project provides a parameterized augmentation script that can be executed from the terminal.
+
+```
+python propose_aug.py \
+--input_dir ../Down_Syndrome_Data/Data \
+--output_dir ../Down_Syndrome_Data/Data \
+--aug_times 65 \
+--apply_n_ops 2 \
+--suffix D 
+
 ```
 
-#### 2. Inference 
+| Argument                                      | Description                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `--input_dir `                             | Path to the input image folder.                     |
+| `--output_dir `                     | Path to the output folder for augmented images. |
+| `--aug_times ` | Number of augmented images generated for each original image.             |
+| `--apply_n_ops `                                | Number of random augmentation operations applied to each generated image.                 |
+| `--suffix `                | Only images whose filename ends with this suffix before the file extension will be processed.                        |
+
+### 3. Creates 5 folds cv dataset
+This script creates classification dataset folders from a CSV split definition.  
+
+#### Input requirements
+The CSV file should contain at least the following columns:
+
+- `file`: image filename
+- `pos/neg`: class label (`1` for positive, `0` for negative)
+- `f1`, `f2`, `f3`, `f4`, `f5`: split assignment for each fold (`train` or `test`)
+
+#### Output structure
+
+For each fold, the output directory will be organized as:
+
+```bash
+out_root/
+├── folder1/
+│   ├── train/
+│   │   ├── pos/
+│   │   └── neg/
+│   └── test/
+│       ├── pos/
+│       └── neg/
+├── folder2/
+├── folder3/
+├── folder4/
+└── folder5/
+```
+#### Run 5 folds cv dataset script
+```
+python create_5cv_dataset.py \
+  --csv_path ../Down_Syndrome_Data/list/5fold_CV_2020sample_with_Aug.csv \
+  --main_folder ../Down_Syndrome_Data/Data \
+  --out_root cls_dataset/5fold_CV_2020sample_with_Aug \
+  --run_all_folds \
+  --prefer_symlink \
+  --allow_hardlink \
+  --save_miss_report
+```
+#### Run single folds dataset script
+```
+python create_5cv_dataset.py \
+  --csv_path ../Down_Syndrome_Data/list/split_temporal_with_Aug.csv \
+  --main_folder ../Down_Syndrome_Data/Data \
+  --out_root cls_dataset/split_temporal_with_Aug \
+  --fold 1 \
+  --prefer_symlink \
+  --allow_hardlink \
+  --save_miss_report
+```
+| Argument | Description |
+| --- | --- |
+| `--csv_path` | Path to the CSV file. |
+| `--main_folder` | Folder containing the source images. |
+| `--fold` | Fold index to run, such as `1`, `2`, `3`, `4`, or `5`. |
+| `--run_all_folds` | Run all folds from `1` to `5`. |
+| `--out_root` | Root output directory. |
+| `--prefer_symlink` | Prefer symbolic links when creating dataset files. |
+| `--allow_hardlink` | Allow hard links if symbolic links fail. |
+| `--save_miss_report` | Save a CSV report for missing or invalid entries. |
+
+### 4. Training
+The training script supports configurable parameters from the terminal.  
+It can be used to train:
+
+- a single fold
+- all 5 folds sequentially
+#### File Structure
+
+Before training, the dataset directory should be organized as follows:
+
+```bash
+cls_dataset/
+└── 5fold_CV_2020sample_with_Aug/
+    ├── folder1/
+    │   ├── train/
+    │   │   ├── pos/
+    │   │   └── neg/
+    │   └── test/
+    │       ├── pos/
+    │       └── neg/
+    ├── folder2/
+    ├── folder3/
+    ├── folder4/
+    └── folder5/
+```
+
+#### Train 5 folds cv dataset 
+```
+python train.py \
+  --model DE_DS_netx.pt \
+  --data 5fold_CV_2020sample_with_Aug \
+  --epochs 500 \
+  --imgsz 1024 \
+  --batch 8 \
+  --run_all_folds
+```
+#### Train a single fold
+```
+python train_cls.py \
+  --model DE_DS_net.pt \
+  --data split_temporal_with_Aug \
+  --fold 1 \
+  --epochs 500 \
+  --imgsz 1024 \
+  --batch 8
+```
+#### Output Directory
+Training results will be saved under:
+
+-./cls_trained_model/{data}/folder{fold}/{name}/weights/best.pt
+
+If all 5 folds are trained, the output structure will look like:
+
+```
+cls_trained_model/
+└── 5fold_CV_2020sample_with_Aug/
+    ├── folder1/
+    │   └── DE_DS_net/weights/best.pt
+    ├── folder2/
+    │   └── DE_DS_net/
+    ├── folder3/
+    │   └── DE_DS_net/
+    ├── folder4/
+    │   └── DE_DS_net/
+    └── folder5/
+        └── DE_DS_net/
+```
+
+| Argument | Description |
+| --- | --- |
+| `--model` | Path or name of the model file. |
+| `--data` | Dataset name under `./cls_dataset/`. |
+| `--epochs` | Number of training epochs. |
+| `--imgsz` | Input image size. |
+| `--batch` | Batch size. |
+| `--name` | Experiment name used for saving results. |
+| `--fold` | Fold index to train, such as `1`, `2`, `3`, `4`, or `5`. |
+| `--run_all_folds` | Train all folds from `1` to `5`. |
+
+### 2. Inference 
 
 To generate the prediction outcome of the DSNet model in partial Down syndrome dataset, 
 
@@ -83,5 +246,6 @@ http://creativecommons.org/licenses/by-nc/4.0/
 ## Contact
 Prof. Ching-Wei Wang  
   
-aiexplore.tw@gmail.com; cwwang1979@gmail.com  
-
+cweiwang@mail.ntust.edu.tw; cwwang1979@gmail.com  
+  
+National Taiwan University of Science and Technology
