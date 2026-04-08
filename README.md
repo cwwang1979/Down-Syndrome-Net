@@ -4,7 +4,7 @@
 ## Associated Publications
 If you use this work or any part of this repository in your research, please cite the following paper:
 https://github.com/cwwang1979/Down-Syndrome-Net
-- (Under submission) Wang et al. (2025) Deep learning for early Down syndrome screening on first-trimester ultrasound images
+- (Under submission) Wang et al. (2025) Deep learning for early Down syndrome screening on first-trimester ultrasound images. IEEE
 ## Setup
 
 #### Requirements
@@ -15,9 +15,9 @@ https://github.com/cwwang1979/Down-Syndrome-Net
 - Python (3.8.20), opencv-python (4.11.0.86), PyTorch (2.4.1), torchvision (0.19.1).
 
 #### Download
-Data is download from the [zip](https://drive.google.com/drive/folders/1cOJHQR1HMLbqTkAoDAGilKgpWxn6wqf4) file. Please use the password on the associated paper to decompress the file.
+The Down syndrome dataset that supports the findings of this study has been made publicly accessible on [zip](https://drive.google.com/drive/folders/1cOJHQR1HMLbqTkAoDAGilKgpWxn6wqf4). Please use the password on the associated paper to decompress the file.
 
-Code, execution file, configuration file, and models are download from the [zip](https://drive.google.com/drive/folders/1amVTucHGRIKUqrMT0nC4Cq_kJ2q8Y3kA) file. Please use the password on the associated paper to decompress the file.
+Code, execution file, configuration file, and models could be downloaded from [zip](https://drive.google.com/drive/folders/1amVTucHGRIKUqrMT0nC4Cq_kJ2q8Y3kA). Please use the password on the associated paper to decompress the file.
 
 ## Steps
 ### 1.Installation
