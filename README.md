@@ -21,7 +21,7 @@ The Down syndrome dataset that supports the findings of this study has been made
 The proposed DL model was deployed using the Pytorch framework in Python and the program code has been made publicly accessible on [zip](https://drive.google.com/drive/folders/1amVTucHGRIKUqrMT0nC4Cq_kJ2q8Y3kA). Please use the password on the associated paper to decompress the file.
 
 ## Steps
-Three experiments are provided in this project:
+Three experiments were performed in this project:
 
 - **2020-sample dataset with 5-fold cross-validation**  
   This experiment trains the model on the full 2020-sample dataset using 5-fold cross-validation.
