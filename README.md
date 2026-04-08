@@ -4,7 +4,8 @@
 ## Associated Publications
 If you use this work or any part of this repository in your research, please cite the following paper:
 https://github.com/cwwang1979/Down-Syndrome-Net
-- (Under submission) Wang et al. (2025) Deep learning for early Down syndrome screening on first-trimester ultrasound images. IEEE
+- (Under submission) Wang et al. (2025) Deep learning for early Down syndrome screening on first-trimester ultrasound images. IEEE Journal of Biomedical and Health Informatics (JBHI)
+- (Under submission) Wang et al. (2026) A Comprehensive First-Trimester Fetal Ultrasound Dataset for Early Down Syndrome Screening. Nature Scientific Data
 ## Setup
 
 #### Requirements
@@ -17,9 +18,20 @@ https://github.com/cwwang1979/Down-Syndrome-Net
 #### Download
 The Down syndrome dataset that supports the findings of this study has been made publicly accessible on [zip](https://drive.google.com/drive/folders/1cOJHQR1HMLbqTkAoDAGilKgpWxn6wqf4). Please use the password on the associated paper to decompress the file.
 
-Code, execution file, configuration file, and models could be downloaded from [zip](https://drive.google.com/drive/folders/1amVTucHGRIKUqrMT0nC4Cq_kJ2q8Y3kA). Please use the password on the associated paper to decompress the file.
+The proposed DL model was deployed using the Pytorch framework in Python and the program code has been made publicly accessible on [zip](https://drive.google.com/drive/folders/1amVTucHGRIKUqrMT0nC4Cq_kJ2q8Y3kA). Please use the password on the associated paper to decompress the file.
 
 ## Steps
+Three experiments are provided in this project:
+
+- **2020-sample dataset with 5-fold cross-validation**  
+  This experiment trains the model on the full 2020-sample dataset using 5-fold cross-validation.
+
+- **1320-sample dataset with 5-fold cross-validation**  
+  This experiment trains the model on the reduced 1320-sample dataset using 5-fold cross-validation.
+
+- **Temporal-split dataset**  
+  This experiment trains the model on the temporal-split dataset to evaluate performance under a chronological data split.
+  
 ### 1.Installation
 
 Please refer to the following instructions.
@@ -53,7 +65,7 @@ python propose_aug.py \
 | `--apply_n_ops `                                | Number of random augmentation operations applied to each generated image.                 |
 | `--suffix `                | Only images whose filename ends with this suffix before the file extension will be processed.                        |
 
-### 3. Creates 5 folds cv dataset
+### 3. Creates dataset
 This script creates classification dataset folders from a CSV split definition.  
 
 #### Input requirements
@@ -63,12 +75,50 @@ The CSV file should contain at least the following columns:
 - `pos/neg`: class label (`1` for positive, `0` for negative)
 - `f1`, `f2`, `f3`, `f4`, `f5`: split assignment for each fold (`train` or `test`)
 
+
+#### Create 2020-sample dataset with 5-fold cross-validation
+```
+python create_5cv_dataset.py \
+  --csv_path ../Down_Syndrome_Data/list/5fold_CV_2020sample_with_Aug.csv \
+  --main_folder ../Down_Syndrome_Data/Data \
+  --out_root cls_dataset/5fold_CV_2020sample_with_Aug \
+  --run_all_folds \
+  --prefer_symlink \
+  --allow_hardlink \
+  --save_miss_report \
+  --make_inference_set
+```
+
+#### Create 1320-sample dataset with 5-fold cross-validation
+```
+python create_5cv_dataset.py \
+  --csv_path ../Down_Syndrome_Data/list/5fold_CV_1320sample_with_Aug.csv \
+  --main_folder ../Down_Syndrome_Data/Data \
+  --out_root cls_dataset/5fold_CV_1320sample_with_Aug \
+  --run_all_folds \
+  --prefer_symlink \
+  --allow_hardlink \
+  --save_miss_report \
+  --make_inference_set
+```
+#### Create temporal-split dataset
+```
+python create_5cv_dataset.py \
+  --csv_path ../Down_Syndrome_Data/list/split_temporal_with_Aug.csv \
+  --main_folder ../Down_Syndrome_Data/Data \
+  --out_root cls_dataset/split_temporal_with_Aug \
+  --fold 1 \
+  --prefer_symlink \
+  --allow_hardlink \
+  --save_miss_report \
+  --make_inference_set
+```
 #### Dataset structure
 
 For each fold, the output directory will be organized as:
 
-```bash
-out_root/
+```
+{out_root}/
 ├── folder1/
 │   ├── train/
 │   │   ├── pos/
@@ -81,23 +131,7 @@ out_root/
 ├── folder4/
 └── folder5/
 ```
-#### Run 5 folds cv dataset script
-```
 
-
-```
-#### Run single folds dataset script
-```
-python create_5cv_dataset.py \
-  --csv_path ../Down_Syndrome_Data/list/split_temporal_with_Aug.csv \
-  --main_folder ../Down_Syndrome_Data/Data \
-  --out_root cls_dataset/split_temporal_with_Aug \
-  --fold 1 \
-  --prefer_symlink \
-  --allow_hardlink \
-  --save_miss_report \
-  --make_inference_set
-```
 | Argument | Description |
 | --- | --- |
 | `--csv_path` | Path to the CSV file. |
@@ -111,18 +145,14 @@ python create_5cv_dataset.py \
 | `--make_inference_set` | make infernce set. |
 
 ### 4. Training
-The training script supports configurable parameters from the terminal.  
-It can be used to train:
-
-- a single fold
-- all 5 folds sequentially
+ 
 #### File Structure
 
 Before training, the dataset directory should be organized as follows:
 
 ```bash
 cls_dataset/
-└── 5fold_CV_2020sample_with_Aug/
+└── {out_root}/
     ├── folder1/
     │   ├── train/
     │   │   ├── pos/
@@ -136,7 +166,7 @@ cls_dataset/
     └── folder5/
 ```
 
-#### Train 5 folds cv dataset 
+#### Train on the 2020-sample dataset with 5-fold cross-validation
 ```
 python train.py \
   --model DE_DS_net.pt \
@@ -146,7 +176,18 @@ python train.py \
   --batch 8 \
   --run_all_folds
 ```
-#### Train a single fold
+#### Train on the 1320-sample dataset with 5-fold cross-validation
+```
+python train.py \
+  --model DE_DS_net.pt \
+  --data 5fold_CV_1320sample_with_Aug \
+  --epochs 500 \
+  --imgsz 1024 \
+  --batch 8 \
+  --run_all_folds
+```
+
+#### Train on the temporal-split dataset
 ```
 python train_cls.py \
   --model DE_DS_net.pt \
@@ -165,7 +206,7 @@ If all 5 folds are trained, the output structure will look like:
 
 ```
 cls_trained_model/
-└── 5fold_CV_2020sample_with_Aug/
+└── {data}/
     ├── folder1/
     │   └── DE_DS_net/weights/best.pt
     ├── folder2/
@@ -193,7 +234,7 @@ cls_trained_model/
 
 To generate the prediction outcome of the DE_DSNet model in Down syndrome dataset, 
 
-#### Inference 5 folds cv dataset 
+#### Inference on the 2020-sample dataset with 5-fold cross-validation
 ```
 python inference.py \
   --modelname DE_DS_net \
@@ -209,11 +250,20 @@ python inference.py \
   --imgsz 1024 \
   --run_all_folds
 ```
-#### Inference a single fold
+#### Inference on the 1320-sample dataset with 5-fold cross-validation
 ```
 python inference.py \
-  --model DE_DS_net \
-  --data split_temporal_with_Aug \
+  --modelname DE_DS_net \
+  --data_name 5fold_CV_1320sample_with_Aug \
+  --imgsz 1024 \
+  --run_all_folds
+```
+
+#### Inference on the temporal-split dataset
+```
+python inference.py \
+  --modelname DE_DS_net \
+  --data_name split_temporal_with_Aug \
   --fold 1 \
   --imgsz 1024 \
 ```
