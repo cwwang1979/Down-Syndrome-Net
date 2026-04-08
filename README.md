@@ -18,7 +18,7 @@ https://github.com/cwwang1979/Down-Syndrome-Net
 #### Download
 The Down syndrome dataset that supports the findings of this study has been made publicly accessible on [zip](https://drive.google.com/drive/folders/1cOJHQR1HMLbqTkAoDAGilKgpWxn6wqf4). Please use the password on the associated paper to decompress the file.
 
-The proposed DL model was deployed using the Pytorch framework in Python and the program code has been made publicly accessible on [zip](https://drive.google.com/drive/folders/1amVTucHGRIKUqrMT0nC4Cq_kJ2q8Y3kA). Please use the password on the associated paper to decompress the file.
+The proposed DL model was deployed using the Pytorch framework in Python and the program code has been made publicly accessible on [zip](https://drive.google.com/drive/folders/1hD_05tudxcx7TBhWxnPPVxbX1CNlt3hP?usp=sharing). Please use the password on the associated paper to decompress the file.
 
 ## Steps
 Three experiments were performed in this project:
