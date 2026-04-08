@@ -23,10 +23,10 @@ The proposed DL model was deployed using the Pytorch framework in Python and the
 ## Steps
 Three experiments were performed in this project:
 
-- **2020-sample dataset with 5-fold cross-validation**  
+- **A complete dataset with 2020 samples for 5-fold cross-validation**  
   This experiment trains the model on the full 2020-sample dataset using 5-fold cross-validation.
 
-- **1320-sample dataset with 5-fold cross-validation**  
+- **A reduced dataset with 1320 (65%) samples for 5-fold cross-validation to test Data Efficiency**  
   This experiment trains the model on the reduced 1320-sample dataset using 5-fold cross-validation.
 
 - **Temporal-split dataset**  
