@@ -79,7 +79,7 @@ The CSV file should contain at least the following columns:
 #### Create 2020-sample dataset with 5-fold cross-validation
 ```
 python create_5cv_dataset.py \
-  --csv_path ../Down_Syndrome_Data/list/5fold_CV_2020sample_with_Aug.csv \
+  --csv_path list/5fold_CV_2020sample_with_Aug.csv \
   --main_folder ../Down_Syndrome_Data/Data \
   --out_root cls_dataset/5fold_CV_2020sample_with_Aug \
   --run_all_folds \
@@ -92,7 +92,7 @@ python create_5cv_dataset.py \
 #### Create 1320-sample dataset with 5-fold cross-validation
 ```
 python create_5cv_dataset.py \
-  --csv_path ../Down_Syndrome_Data/list/5fold_CV_1320sample_with_Aug.csv \
+  --csv_path list/5fold_CV_1320sample_with_Aug.csv \
   --main_folder ../Down_Syndrome_Data/Data \
   --out_root cls_dataset/5fold_CV_1320sample_with_Aug \
   --run_all_folds \
@@ -104,7 +104,7 @@ python create_5cv_dataset.py \
 #### Create temporal-split dataset
 ```
 python create_5cv_dataset.py \
-  --csv_path ../Down_Syndrome_Data/list/split_temporal_with_Aug.csv \
+  --csv_path list/split_temporal_with_Aug.csv \
   --main_folder ../Down_Syndrome_Data/Data \
   --out_root cls_dataset/split_temporal_with_Aug \
   --fold 1 \
