@@ -43,7 +43,7 @@ conda activate DE_DSNet
 # install related package
 pip install -r requirements.txt
 ```
-### 2. Run the augmentation script 
+### 2. Run the Proposed Augmentation script 
 
 This project provides a parameterized augmentation script that can be executed from the terminal.
 
