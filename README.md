@@ -1,5 +1,5 @@
 
-# Data-Efficient Down Syndrome Network (DE-DSNet)
+# Data-Efficient Down Syndrome Network (DE-DSNet) v1.00
 
 ## Associated Publications
 If you use this work or any part of this repository in your research, please cite the following paper:
@@ -63,7 +63,7 @@ The CSV file should contain at least the following columns:
 - `pos/neg`: class label (`1` for positive, `0` for negative)
 - `f1`, `f2`, `f3`, `f4`, `f5`: split assignment for each fold (`train` or `test`)
 
-#### Output structure
+#### Dataset structure
 
 For each fold, the output directory will be organized as:
 
@@ -83,14 +83,8 @@ out_root/
 ```
 #### Run 5 folds cv dataset script
 ```
-python create_5cv_dataset.py \
-  --csv_path ../Down_Syndrome_Data/list/5fold_CV_2020sample_with_Aug.csv \
-  --main_folder ../Down_Syndrome_Data/Data \
-  --out_root cls_dataset/5fold_CV_2020sample_with_Aug \
-  --run_all_folds \
-  --prefer_symlink \
-  --allow_hardlink \
-  --save_miss_report
+
+
 ```
 #### Run single folds dataset script
 ```
@@ -101,7 +95,8 @@ python create_5cv_dataset.py \
   --fold 1 \
   --prefer_symlink \
   --allow_hardlink \
-  --save_miss_report
+  --save_miss_report \
+  --make_inference_set
 ```
 | Argument | Description |
 | --- | --- |
@@ -113,6 +108,7 @@ python create_5cv_dataset.py \
 | `--prefer_symlink` | Prefer symbolic links when creating dataset files. |
 | `--allow_hardlink` | Allow hard links if symbolic links fail. |
 | `--save_miss_report` | Save a CSV report for missing or invalid entries. |
+| `--make_inference_set` | make infernce set. |
 
 ### 4. Training
 The training script supports configurable parameters from the terminal.  
@@ -143,7 +139,7 @@ cls_dataset/
 #### Train 5 folds cv dataset 
 ```
 python train.py \
-  --model DE_DS_netx.pt \
+  --model DE_DS_net.pt \
   --data 5fold_CV_2020sample_with_Aug \
   --epochs 500 \
   --imgsz 1024 \
@@ -163,7 +159,7 @@ python train_cls.py \
 #### Output Directory
 Training results will be saved under:
 
--./cls_trained_model/{data}/folder{fold}/{name}/weights/best.pt
+-./cls_trained_model/{data}/folder{fold}/{mode}/weights/best.pt
 
 If all 5 folds are trained, the output structure will look like:
 
@@ -193,37 +189,66 @@ cls_trained_model/
 | `--fold` | Fold index to train, such as `1`, `2`, `3`, `4`, or `5`. |
 | `--run_all_folds` | Train all folds from `1` to `5`. |
 
-### 2. Inference 
+### 5. Inference 
 
-To generate the prediction outcome of the DSNet model in partial Down syndrome dataset, 
+To generate the prediction outcome of the DE_DSNet model in Down syndrome dataset, 
+
+#### Inference 5 folds cv dataset 
+```
+python inference.py \
+  --modelname DE_DS_net \
+  --data_name 5fold_CV_2020sample_with_Aug \
+  --imgsz 1024 \
+  --run_all_folds
+```
+Or use a trained model directory:
+```
+python inference.py \
+  --modelname best_model \
+  --data_name 5fold_CV_2020sample_with_Aug \
+  --imgsz 1024 \
+  --run_all_folds
+```
+#### Inference a single fold
+```
+python inference.py \
+  --model DE_DS_net \
+  --data split_temporal_with_Aug \
+  --fold 1 \
+  --imgsz 1024 \
+```
+
+
+| Argument | Description |
+| --- | --- |
+| `--modelname` | Model experiment folder name. |
+| `--data_name` | Dataset or experiment group name used in model and output paths. |
+| `--fold` | Fold index to run, such as `1`, `2`, `3`, `4`, or `5`. |
+| `--run_all_folds` | Run all folds from `1` to `5`. |
+| `--imgsz` | Inference image size. |
+
+
+#### Output strusture
+Prediction results will be saved under:
+```
+./DE_DSNet_predictions/{data_name}/folder{fold}/{modelname}
+```
 
 ```
-python inference.py --stage predict --model DSNet1.pt --source "../Down_Syndrome_dataset/inference_dataset" --imgsz 1024 --save_txt=True --project "./inference_result" --name "DSNet1_predictions"
-```
-
-| Argument                                      | Description                                                        |
-| --------------------------------------------- | ------------------------------------------------------------------ |
-| `--stage `                             | Indicates that the model is in inference mode.                     |
-| `--model `                     | Path to the proposed model. This study adopts 3-fold cross-validation, and therefore three trained models are provided(DSNet1.pt, DSNet2.pt, DSNet3.pt)
-| `--source ` | Directory containing the test images             |
-| `--imgsz `                                | Input feature space of size 1024×1024.                 |
-| `--save_txt`                             | Saves predictions (classes, probabilities) in `.txt` format.      |
-| `--project `                | Base directory where results will be saved.                        |
-| `--name `                         | Subdirectory name under the project folder for this run's results. |
-
-
-
-
-After inference, the output directory structure will be:
-
-```
-./DSNet1_predictions
-└── DSNet1
-    └── labels
-        ├── test_image1.txt
-        ├── test_image1.txt
-        ├── ⋮
-        └── test_imagen.txt
+DE_DSNet_predictions/
+└── {data_name}/
+    ├── folder1/
+    │   └── {modelname}
+    │       └── labels
+    │           └── output.txt
+    ├── folder2/
+    │   └── {modelname}/
+    ├── folder3/
+    │   └── {modelname}/
+    ├── folder4/
+    │   └── {modelname}/
+    └── folder5/
+        └── {modelname}/
 
 ```
 Each output .txt file corresponds to one input image and lists the classes in descending order of predicted probability (highest first):
