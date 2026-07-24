@@ -313,6 +313,462 @@ pos = Fetus with trisomy 21
 
 neg = Normal fetus
 
+## 6. Real-Time TensorRT Edge Inference for Images and Prerecorded Videos
+
+The TensorRT edge-inference pipeline described in this section is separate from the standard PyTorch inference pipeline described in Section 5.
+
+The two inference pipelines use different scripts, model formats, software environments, and output formats:
+
+| Pipeline | Script | Model format | Environment |
+|---|---|---|---|
+| Standard dataset inference | `inference.py` | PyTorch `.pt` | Training and standard inference environment |
+| TensorRT edge inference | `tensorrt_edge_inference.py` | TensorRT `.engine` | Separate TensorRT inference environment |
+
+The TensorRT script performs image-level or frame-by-frame classification and generates class probabilities, TP/TN/FP/FN results, inference-time measurements, annotated outputs, and CSV summaries.
+
+---
+
+### 6.1 Download and Package Structure
+
+The TensorRT edge-inference package is distributed separately from the training and standard PyTorch inference code.
+
+Recommended archive filename:
+
+```text
+DE-T21Net_v1.00_TensorRT_Edge_Inference_Package_for_Fetal_Ultrasound_Images_and_Videos.zip
+```
+
+<!-- Replace TENSORRT_PACKAGE_DOWNLOAD_LINK with the actual download URL. -->
+
+The TensorRT edge-inference package is available on [zip](TENSORRT_PACKAGE_DOWNLOAD_LINK). Please use the password on the associated paper to decompress the file.
+
+After decompression, the package should be organized as follows:
+
+```text
+DE-T21Net_v1.00_TensorRT_Edge_Inference_Package_for_Fetal_Ultrasound_Images_and_Videos/
+├── tensorrt_edge_inference.py
+├── environment_tensorrt.yml
+├── models/
+│   └── DE_T21Net_temporal_split_fold1_fp16.engine
+├── input/
+│   ├── pos/
+│   └── neg/
+└── output/
+```
+
+The released TensorRT package includes:
+
+- the TensorRT inference script;
+- the trained TensorRT `.engine` model;
+- the TensorRT environment file; and
+- fetal ultrasound images for image inference.
+
+The original video dataset is not included in the package. Video inference can still be performed using user-provided videos that follow the required directory structure.
+
+Eight six-second video inference demonstrations are provided in Section 6.8.
+
+---
+
+### 6.2 TensorRT Environment Setup
+
+The TensorRT edge-inference pipeline requires a separate environment from the training and standard PyTorch inference pipeline described in the previous sections.
+
+The tested TensorRT inference environment includes:
+
+| Package | Version |
+|---|---:|
+| Python | 3.11.15 |
+| CUDA Toolkit | 13.0.3 |
+| TensorRT | 11.1.0.106 |
+| PyTorch | 2.13.0+cu130 |
+| torchvision | 0.28.0+cu130 |
+| Ultralytics | 8.4.104 |
+| OpenCV | 4.13.0 |
+| NumPy | 1.26.4 |
+| pandas | 3.0.3 |
+
+The complete TensorRT environment package list is provided in:
+
+```text
+requirements.txt
+
+---
+
+### 6.3 Fixed Inference Settings
+
+The following settings are fixed in the TensorRT inference source code to ensure consistent evaluation:
+
+| Setting | Value |
+|---|---:|
+| Input image size | 1024 × 1024 |
+| POS confidence threshold | 0.5 |
+| Video POS ratio threshold | 0.5 |
+| Rotate phase duration | 3.0 seconds |
+| Terminal print interval | 10 frames |
+
+For image-level and frame-level classification:
+
+```text
+POS confidence >= 0.5 -> POS
+POS confidence < 0.5  -> NEG
+```
+
+For video-level classification:
+
+```text
+positive_frames / total_frames >= 0.5 -> POS
+positive_frames / total_frames < 0.5  -> NEG
+```
+
+The input image size, classification thresholds, rotate phase duration, and terminal print interval are fixed in the source code and cannot be modified through command-line arguments.
+
+The rotate phase duration is used to identify the transformation phase in the six-second augmented demonstration videos. The first 3.0 seconds correspond to the rotation phase. This setting is used for phase display and does not change the frame-level or video-level classification thresholds.
+
+The class labels are defined as follows:
+
+```text
+pos -> fetus with trisomy 21
+neg -> healthy fetus
+```
+
+---
+
+### 6.4 Image Inference
+
+#### Input Directory Structure
+
+For image inference, the `input` directory must contain `pos` and `neg` subdirectories:
+
+```text
+input/
+├── pos/
+│   ├── positive_image_1.png
+│   └── positive_image_2.png
+└── neg/
+    ├── negative_image_1.png
+    └── negative_image_2.png
+```
+
+The parent directory determines the ground-truth label:
+
+```text
+input/pos/... -> GT = pos
+input/neg/... -> GT = neg
+```
+
+#### Run Image Inference
+
+Run the following command from the extracted TensorRT package directory:
+
+```bash
+python tensorrt_edge_inference.py \
+  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+  --input-dir input \
+  --output-dir output
+```
+
+Users with a different directory structure should replace the paths with their local paths:
+
+```bash
+python tensorrt_edge_inference.py \
+  --model-path /path/to/DE_T21Net_temporal_split_fold1_fp16.engine \
+  --input-dir /path/to/input \
+  --output-dir /path/to/output
+```
+
+#### Image Output Structure
+
+```text
+output/
+├── image_summary.csv
+└── images/
+    ├── pos/
+    └── neg/
+```
+
+The `pos` and `neg` output subdirectories contain annotated image results corresponding to the input ground-truth class directories:
+
+```text
+input/pos/... -> output/images/pos/...
+input/neg/... -> output/images/neg/...
+```
+
+Each annotated image displays:
+
+```text
+Ground-truth label
+Predicted image label
+TP/TN/FP/FN result
+POS class probability
+NEG class probability
+Inference time
+```
+
+The displayed confidence values are the model probabilities for the two classes:
+
+```text
+POS conf = model probability for the POS class
+NEG conf = model probability for the NEG class
+```
+
+In `image_summary.csv`, `Probability` represents the POS-class probability:
+
+```text
+Image Probability = POS conf
+```
+
+The final image prediction is determined from the POS-class probability:
+
+```text
+POS conf >= 0.5 -> POS
+POS conf < 0.5  -> NEG
+```
+
+Example:
+
+```text
+GT: NEG
+Image Pred: NEG
+Result: TN
+POS conf: 0.0000
+NEG conf: 1.0000
+```
+
+---
+
+### 6.5 Video Inference
+
+The original video dataset is not distributed in the TensorRT package. However, the inference script supports prerecorded videos supplied by the user.
+
+#### Input Directory Structure
+
+For video inference, the `input` directory must contain `pos` and `neg` subdirectories:
+
+```text
+input/
+├── pos/
+│   ├── positive_video_1.mp4
+│   └── positive_video_2.mp4
+└── neg/
+    ├── negative_video_1.mp4
+    └── negative_video_2.mp4
+```
+
+The parent directory determines the ground-truth label:
+
+```text
+input/pos/... -> GT = pos
+input/neg/... -> GT = neg
+```
+
+#### Run Video Inference
+
+```bash
+python tensorrt_edge_inference.py \
+  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+  --input-dir input \
+  --output-dir output
+```
+
+Users with a different directory structure should replace the paths with their local paths:
+
+```bash
+python tensorrt_edge_inference.py \
+  --model-path /path/to/DE_T21Net_temporal_split_fold1_fp16.engine \
+  --input-dir /path/to/input \
+  --output-dir /path/to/output
+```
+
+#### Video Output Structure
+
+```text
+output/
+├── video_summary.csv
+├── pos/
+└── neg/
+```
+
+The `pos` and `neg` output subdirectories contain annotated video results corresponding to the input ground-truth class directories.
+
+Each video is processed frame by frame. Every frame receives:
+
+```text
+POS conf
+NEG conf
+Frame-level prediction
+TP/TN/FP/FN result
+Inference time
+```
+
+For videos, `Probability` is calculated as:
+
+```text
+Video Probability = positive_frames / total_frames
+```
+
+This video-level `Probability` is the proportion of frames classified as POS. It is not the average POS confidence across all frames.
+
+The final video-level prediction is determined using the fixed video POS ratio threshold:
+
+```text
+Video Probability >= 0.5 -> POS
+Video Probability < 0.5  -> NEG
+```
+
+Example:
+
+```text
+positive_frames = 120
+total_frames = 180
+
+Video Probability = 120 / 180
+                  = 0.6667
+
+Video prediction = POS
+```
+
+---
+
+### 6.6 Optional Arguments
+
+Use a specific GPU:
+
+```bash
+--device 0
+```
+
+Display the OpenCV inference window:
+
+```bash
+--show-window
+```
+
+Example:
+
+```bash
+python tensorrt_edge_inference.py \
+  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+  --input-dir input \
+  --output-dir output \
+  --device 0 \
+  --show-window
+```
+
+---
+
+### 6.7 Combined Image and Video Input
+
+Images and videos may also be placed in the same `input` directory:
+
+```text
+input/
+├── pos/
+│   ├── positive_image_1.png
+│   ├── positive_image_2.png
+│   ├── positive_video_1.mp4
+│   └── positive_video_2.mp4
+└── neg/
+    ├── negative_image_1.png
+    ├── negative_image_2.png
+    ├── negative_video_1.mp4
+    └── negative_video_2.mp4
+```
+
+Run:
+
+```bash
+python tensorrt_edge_inference.py \
+  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+  --input-dir input \
+  --output-dir output
+```
+
+The script automatically searches for supported image and video files under the input directory.
+
+For clearer output management, separate image and video input directories are recommended when users provide their own video files.
+
+---
+
+### 6.8 Video Inference Demonstrations
+
+The following six-second videos demonstrate frame-by-frame TensorRT inference on augmented fetal ultrasound videos.
+
+These links provide inference-result demonstrations only. The original video dataset is not distributed in the TensorRT package.
+
+#### Trisomy 21
+
+1. [Trisomy 21 inference demonstration 1](https://youtube.com/shorts/JF52DIa5GIc)
+2. [Trisomy 21 inference demonstration 2](https://youtube.com/shorts/tiqn9pOM-JM)
+3. [Trisomy 21 inference demonstration 3](https://youtube.com/shorts/VMcSjfZ5Oao)
+4. [Trisomy 21 inference demonstration 4](https://youtube.com/shorts/Lh6ruJX24wY)
+
+#### Healthy Fetus
+
+1. [Healthy fetus inference demonstration 1](https://youtube.com/shorts/ej8i_97H4Kw)
+2. [Healthy fetus inference demonstration 2](https://youtube.com/shorts/eNmrUT0pbv8)
+3. [Healthy fetus inference demonstration 3](https://youtube.com/shorts/sOaof6E9pwE)
+4. [Healthy fetus inference demonstration 4](https://youtube.com/shorts/vcc03yzgzK8)
+
+---
+
+### 6.9 Reproducibility
+
+To reproduce the inference results as closely as possible, use the same:
+
+- TensorRT engine file;
+- input images or videos;
+- fixed inference settings;
+- Python and package versions;
+- CUDA version;
+- TensorRT version; and
+- compatible NVIDIA GPU architecture.
+
+When the same TensorRT engine, input data, inference settings, software environment, and compatible hardware are used, the predicted classes and TP/TN/FP/FN results are expected to remain consistent.
+
+Small numerical differences in `POS conf` and `NEG conf` may still occur because of floating-point computation, TensorRT optimization, GPU architecture, and software-version differences. A small confidence difference usually does not change the final classification unless the POS-class probability is close to the fixed threshold of `0.5`.
+
+Runtime measurements are hardware- and system-dependent. The following values may vary between runs:
+
+```text
+Inference time
+Processing FPS
+Elapsed time
+GPU utilization
+GPU memory usage
+```
+
+Possible causes include GPU load, CPU load, system temperature, storage performance, video-decoding overhead, and background processes.
+
+Therefore, runtime measurements should be evaluated under a controlled and clearly documented environment.
+
+---
+
+### 6.10 TensorRT Engine Compatibility
+
+TensorRT `.engine` files are platform-dependent binary files. Compatibility may depend on:
+
+- NVIDIA GPU architecture;
+- CUDA version;
+- TensorRT version;
+- NVIDIA driver version; and
+- TensorRT build configuration.
+
+The released TensorRT package provides the TensorRT `.engine` model but does not include the original PyTorch or ONNX model used to build the engine.
+
+If the provided engine is compatible with the target environment, it can be loaded directly:
+
+```bash
+python tensorrt_edge_inference.py \
+  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+  --input-dir input \
+  --output-dir output
+```
+
+If the engine cannot be loaded because of a GPU, CUDA, TensorRT, or driver incompatibility, a new TensorRT engine must be exported from the original PyTorch or ONNX model in the target environment.
+
+Because the original PyTorch and ONNX model files are not included in this TensorRT package, an incompatible engine cannot be rebuilt from the released package alone.
+
+
 ## License
 This Python source code is released under a creative commons license, which allows for personal and research use only. For a commercial license please contact Prof Ching-Wei Wang. You can view a license summary here:  
 http://creativecommons.org/licenses/by-nc/4.0/
