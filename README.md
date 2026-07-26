@@ -313,67 +313,67 @@ pos = Fetus with trisomy 21
 
 neg = Normal fetus
 
-## 6. Real-Time TensorRT Edge Inference for Images and Prerecorded Videos
+## 6. DE-T21Net-Lite Inference for Fetal Ultrasound Images and Videos
 
-The TensorRT edge-inference pipeline described in this section is separate from the standard PyTorch inference pipeline described in Section 5.
+The DE-T21Net-Lite inference pipeline described in this section is separate from the standard PyTorch inference pipeline described in Section 5.
+
+DE-T21Net-Lite uses a hardware-optimized TensorRT inference engine to improve inference efficiency on the target GPU platform. The Lite inference script supports image-level classification and frame-by-frame classification of prerecorded videos. It generates class probabilities, TP/TN/FP/FN results, inference-time measurements, annotated outputs, and CSV summaries.
 
 The two inference pipelines use different scripts, model formats, software environments, and output formats:
 
 | Pipeline | Script | Model format | Environment |
 |---|---|---|---|
 | Standard dataset inference | `inference.py` | PyTorch `.pt` | Training and standard inference environment |
-| TensorRT edge inference | `tensorrt_edge_inference.py` | TensorRT `.engine` | Separate TensorRT inference environment |
-
-The TensorRT script performs image-level or frame-by-frame classification and generates class probabilities, TP/TN/FP/FN results, inference-time measurements, annotated outputs, and CSV summaries.
+| DE-T21Net-Lite inference | `DE_T21Net_Lite_inference.py` | TensorRT `.engine` | Separate Lite inference environment |
 
 ---
 
 ### 6.1 Download and Package Structure
 
-The TensorRT edge-inference package is distributed separately from the training and standard PyTorch inference code.
+The DE-T21Net-Lite inference package is distributed separately from the training and standard PyTorch inference code.
 
 Recommended archive filename:
 
 ```text
-DE-T21Net_v1.00_TensorRT_Edge_Inference_Package_for_Fetal_Ultrasound_Images_and_Videos.zip
+DE-T21Net_v1.00_Lite_Inference_for_Fetal_Ultrasound_Images_and_Videos.zip
 ```
 
-<!-- Replace TENSORRT_PACKAGE_DOWNLOAD_LINK with the actual download URL. -->
+<!-- Replace LITE_INFERENCE_PACKAGE_DOWNLOAD_LINK with the actual download URL. -->
 
-The TensorRT edge-inference package is available on [zip](TENSORRT_PACKAGE_DOWNLOAD_LINK). Please use the password on the associated paper to decompress the file.
+The DE-T21Net-Lite inference package is available on [zip](https://drive.google.com/file/d/10btthL5D3CQaf5xVs80bpu1dIe3Jgmkv/view?usp=drive_link). Please use the password provided in the associated paper to decompress the file.
 
 After decompression, the package should be organized as follows:
 
 ```text
-DE-T21Net_v1.00_TensorRT_Edge_Inference_Package_for_Fetal_Ultrasound_Images_and_Videos/
-├── tensorrt_edge_inference.py
-├── environment_tensorrt.yml
+DE-T21Net_v1.00_Lite_Inference_for_Fetal_Ultrasound_Images_and_Videos/
+├── DE_T21Net_Lite_inference.py
+├── requirements.txt
 ├── models/
-│   └── DE_T21Net_temporal_split_fold1_fp16.engine
+│   └── DE_T21Net_Lite_fp16.engine
 ├── input/
 │   ├── pos/
 │   └── neg/
 └── output/
 ```
 
-The released TensorRT package includes:
+The released package includes:
 
-- the TensorRT inference script;
+- the DE-T21Net-Lite inference script;
 - the trained TensorRT `.engine` model;
-- the TensorRT environment file; and
+- a separate `requirements.txt` file for the Lite inference environment; and
 - fetal ultrasound images for image inference.
 
 The original video dataset is not included in the package. Video inference can still be performed using user-provided videos that follow the required directory structure.
 
-Eight six-second video inference demonstrations are provided in Section 6.8.
+Eight six-second video inference demonstrations are provided in Section 6.6.
 
 ---
 
-### 6.2 TensorRT Environment Setup
+### 6.2 DE-T21Net-Lite Environment Setup
 
-The TensorRT edge-inference pipeline requires a separate environment from the training and standard PyTorch inference pipeline described in the previous sections.
+The DE-T21Net-Lite inference pipeline requires a separate environment from the training and standard PyTorch inference pipeline described in the previous sections.
 
-The tested TensorRT inference environment includes:
+The tested Lite inference environment includes:
 
 | Package | Version |
 |---|---:|
@@ -387,16 +387,46 @@ The tested TensorRT inference environment includes:
 | NumPy | 1.26.4 |
 | pandas | 3.0.3 |
 
-The complete TensorRT environment package list is provided in:
+The extracted Lite inference package contains its own:
 
 ```text
 requirements.txt
+```
+
+This file is different from the `requirements.txt` used in Section 1.
+
+The main project environment in Section 1 is installed using:
+
+```bash
+pip install -r requirements.txt
+```
+
+In contrast, the `requirements.txt` included in the DE-T21Net-Lite inference package is a Conda package specification file. It must be used with `conda create --file` rather than `pip install -r`.
+
+From the extracted Lite inference package directory, create and activate the environment as follows:
+
+```bash
+# create the separate DE-T21Net-Lite inference environment
+conda create --name DE_T21Net_Lite_Inference \
+  --file requirements.txt
+
+# activate the environment
+conda activate DE_T21Net_Lite_Inference
+```
+
+Do not install the Lite inference package requirements using:
+
+```bash
+pip install -r requirements.txt
+```
+
+The environment requirements in the main Setup section apply to model training and standard PyTorch inference. They do not apply to the DE-T21Net-Lite inference pipeline described in this section.
 
 ---
 
 ### 6.3 Fixed Inference Settings
 
-The following settings are fixed in the TensorRT inference source code to ensure consistent evaluation:
+The following settings are fixed in the DE-T21Net-Lite inference source code to ensure consistent evaluation:
 
 | Setting | Value |
 |---|---:|
@@ -435,6 +465,8 @@ neg -> healthy fetus
 
 ### 6.4 Image Inference
 
+The DE-T21Net-Lite script can perform classification on fetal ultrasound images placed under the `input` directory.
+
 #### Input Directory Structure
 
 For image inference, the `input` directory must contain `pos` and `neg` subdirectories:
@@ -458,20 +490,39 @@ input/neg/... -> GT = neg
 
 #### Run Image Inference
 
-Run the following command from the extracted TensorRT package directory:
+Run the following command from the extracted DE-T21Net-Lite package directory:
 
 ```bash
-python tensorrt_edge_inference.py \
-  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+python DE_T21Net_Lite_inference.py \
+  --model-path models/DE_T21Net_Lite_fp16.engine \
   --input-dir input \
   --output-dir output
 ```
 
-Users with a different directory structure should replace the paths with their local paths:
+To select a specific GPU and display the OpenCV inference window, use:
 
 ```bash
-python tensorrt_edge_inference.py \
-  --model-path /path/to/DE_T21Net_temporal_split_fold1_fp16.engine \
+python DE_T21Net_Lite_inference.py \
+  --model-path models/DE_T21Net_Lite_fp16.engine \
+  --input-dir input \
+  --output-dir output \
+  --device 0 \
+  --show-window
+```
+
+| Argument | Description |
+|---|---|
+| `--model-path` | Path to the DE-T21Net-Lite TensorRT `.engine` model. |
+| `--input-dir` | Root input directory containing the `pos` and `neg` subdirectories. |
+| `--output-dir` | Root output directory for annotated images and `image_summary.csv`. |
+| `--device` | GPU device index used for inference, such as `0`. |
+| `--show-window` | Display the OpenCV inference window while processing the input files. |
+
+Users with a different directory structure should replace the example paths with their local paths:
+
+```bash
+python DE_T21Net_Lite_inference.py \
+  --model-path /path/to/DE_T21Net_Lite_fp16.engine \
   --input-dir /path/to/input \
   --output-dir /path/to/output
 ```
@@ -538,7 +589,7 @@ NEG conf: 1.0000
 
 ### 6.5 Video Inference
 
-The original video dataset is not distributed in the TensorRT package. However, the inference script supports prerecorded videos supplied by the user.
+The original video dataset is not distributed in the DE-T21Net-Lite inference package. However, the script supports frame-by-frame inference on prerecorded videos supplied by the user.
 
 #### Input Directory Structure
 
@@ -563,18 +614,39 @@ input/neg/... -> GT = neg
 
 #### Run Video Inference
 
+Run the following command from the extracted DE-T21Net-Lite package directory:
+
 ```bash
-python tensorrt_edge_inference.py \
-  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+python DE_T21Net_Lite_inference.py \
+  --model-path models/DE_T21Net_Lite_fp16.engine \
   --input-dir input \
   --output-dir output
 ```
 
-Users with a different directory structure should replace the paths with their local paths:
+To select a specific GPU and display the OpenCV inference window, use:
 
 ```bash
-python tensorrt_edge_inference.py \
-  --model-path /path/to/DE_T21Net_temporal_split_fold1_fp16.engine \
+python DE_T21Net_Lite_inference.py \
+  --model-path models/DE_T21Net_Lite_fp16.engine \
+  --input-dir input \
+  --output-dir output \
+  --device 0 \
+  --show-window
+```
+
+| Argument | Description |
+|---|---|
+| `--model-path` | Path to the DE-T21Net-Lite TensorRT `.engine` model. |
+| `--input-dir` | Root input directory containing prerecorded videos under the `pos` and `neg` subdirectories. |
+| `--output-dir` | Root output directory for annotated videos and `video_summary.csv`. |
+| `--device` | GPU device index used for inference, such as `0`. |
+| `--show-window` | Display the OpenCV frame-by-frame inference window during video processing. |
+
+Users with a different directory structure should replace the example paths with their local paths:
+
+```bash
+python DE_T21Net_Lite_inference.py \
+  --model-path /path/to/DE_T21Net_Lite_fp16.engine \
   --input-dir /path/to/input \
   --output-dir /path/to/output
 ```
@@ -629,71 +701,11 @@ Video prediction = POS
 
 ---
 
-### 6.6 Optional Arguments
+### 6.6 Video Inference Demonstrations
 
-Use a specific GPU:
+The following six-second videos demonstrate frame-by-frame DE-T21Net-Lite inference on augmented fetal ultrasound videos.
 
-```bash
---device 0
-```
-
-Display the OpenCV inference window:
-
-```bash
---show-window
-```
-
-Example:
-
-```bash
-python tensorrt_edge_inference.py \
-  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
-  --input-dir input \
-  --output-dir output \
-  --device 0 \
-  --show-window
-```
-
----
-
-### 6.7 Combined Image and Video Input
-
-Images and videos may also be placed in the same `input` directory:
-
-```text
-input/
-├── pos/
-│   ├── positive_image_1.png
-│   ├── positive_image_2.png
-│   ├── positive_video_1.mp4
-│   └── positive_video_2.mp4
-└── neg/
-    ├── negative_image_1.png
-    ├── negative_image_2.png
-    ├── negative_video_1.mp4
-    └── negative_video_2.mp4
-```
-
-Run:
-
-```bash
-python tensorrt_edge_inference.py \
-  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
-  --input-dir input \
-  --output-dir output
-```
-
-The script automatically searches for supported image and video files under the input directory.
-
-For clearer output management, separate image and video input directories are recommended when users provide their own video files.
-
----
-
-### 6.8 Video Inference Demonstrations
-
-The following six-second videos demonstrate frame-by-frame TensorRT inference on augmented fetal ultrasound videos.
-
-These links provide inference-result demonstrations only. The original video dataset is not distributed in the TensorRT package.
+These links provide inference-result demonstrations only. The original video dataset is not distributed in the DE-T21Net-Lite inference package.
 
 #### Trisomy 21
 
@@ -711,9 +723,9 @@ These links provide inference-result demonstrations only. The original video dat
 
 ---
 
-### 6.9 Reproducibility
+### 6.7 Reproducibility
 
-To reproduce the inference results as closely as possible, use the same:
+To reproduce the DE-T21Net-Lite inference results as closely as possible, use the same:
 
 - TensorRT engine file;
 - input images or videos;
@@ -743,9 +755,9 @@ Therefore, runtime measurements should be evaluated under a controlled and clear
 
 ---
 
-### 6.10 TensorRT Engine Compatibility
+### 6.8 DE-T21Net-Lite Engine Compatibility
 
-TensorRT `.engine` files are platform-dependent binary files. Compatibility may depend on:
+The DE-T21Net-Lite model is provided as a hardware-optimized TensorRT `.engine` file. TensorRT engine files are platform-dependent binary files, and compatibility may depend on:
 
 - NVIDIA GPU architecture;
 - CUDA version;
@@ -753,20 +765,21 @@ TensorRT `.engine` files are platform-dependent binary files. Compatibility may 
 - NVIDIA driver version; and
 - TensorRT build configuration.
 
-The released TensorRT package provides the TensorRT `.engine` model but does not include the original PyTorch or ONNX model used to build the engine.
+The released DE-T21Net-Lite inference package provides the TensorRT `.engine` model but does not include the original PyTorch or ONNX model used to build the engine.
 
 If the provided engine is compatible with the target environment, it can be loaded directly:
 
 ```bash
-python tensorrt_edge_inference.py \
-  --model-path models/DE_T21Net_temporal_split_fold1_fp16.engine \
+python DE_T21Net_Lite_inference.py \
+  --model-path models/DE_T21Net_Lite_fp16.engine \
   --input-dir input \
   --output-dir output
 ```
 
 If the engine cannot be loaded because of a GPU, CUDA, TensorRT, or driver incompatibility, a new TensorRT engine must be exported from the original PyTorch or ONNX model in the target environment.
 
-Because the original PyTorch and ONNX model files are not included in this TensorRT package, an incompatible engine cannot be rebuilt from the released package alone.
+Because the original PyTorch and ONNX model files are not included in the DE-T21Net-Lite inference package, an incompatible engine cannot be rebuilt from the released package alone.
+
 
 
 ## License
